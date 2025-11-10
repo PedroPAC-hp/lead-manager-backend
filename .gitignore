@@ -1,0 +1,15 @@
+# backend/.gitignore
+
+# Ambiente Virtual
+venv/
+.venv/
+
+# Arquivos de Cache do Python
+__pycache__/
+*.pyc
+
+# Arquivos de ambiente (NUNCA envie segredos para o GitHub)
+.env
+
+# Arquivos do VSCode
+.vscode/
