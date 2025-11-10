@@ -127,3 +127,21 @@ class LeadUpdate(BaseModel):
     model_config = ConfigDict(
         extra='forbid'
     )
+
+class Responsavel(BaseModel):
+    id_bitrix: int = Field(..., description="ID do usuário no Bitrix24")
+    nome: str
+    inicio: int = Field(..., ge=0, le=23, description="Hora de início do turno (0-23)")
+    fim: int = Field(..., ge=0, le=23, description="Hora de fim do turno (0-23)")
+
+class ProductConfigBase(BaseModel):
+    nome: str = Field(..., description="Nome do produto (ex: Pós-Graduação)")
+    webhook_url: str
+    responsaveis: List[Responsavel] = []
+
+class ProductConfigCreate(ProductConfigBase):
+    pass
+
+class ProductConfigPublic(ProductConfigBase):
+    id: PyObjectId = Field(alias="_id")
+    model_config = ConfigDict(arbitrary_types_allowed=True, json_encoders={PyObjectId: str})
