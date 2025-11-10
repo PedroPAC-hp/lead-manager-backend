@@ -32,15 +32,15 @@ async def create_product_config(
     config_dict = config_data.model_dump(by_alias=True)
     
     # Verifica se um produto com o mesmo nome já existe
-    existing_config = await db.products.find_one({"nome": config_dict["nome"]})
+    existing_config = existing_config = await db["products"].find_one({"nome": config_dict["nome"]})
     if existing_config:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Já existe uma configuração para o produto '{config_dict['nome']}'."
         )
         
-    result = await db.products.insert_one(config_dict)
-    new_config = await db.products.find_one({"_id": result.inserted_id})
+    result = await db["products"].insert_one(config_dict)
+    new_config = await db["products"].find_one({"_id": result.inserted_id})
     return new_config
 
 @router.get("/", response_model=List[ProductConfigPublic])
@@ -53,5 +53,5 @@ async def list_product_configs(
     Lista todas as configurações de produto existentes.
     Acessível por qualquer usuário logado.
     """
-    configs = await db.products.find().to_list(length=100)
+    configs = await db["products"].find().to_list(length=100)
     return configs
