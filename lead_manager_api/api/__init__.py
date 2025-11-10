@@ -2,6 +2,7 @@
 
 from .auth import router as auth_router
 from .import_routes import router as import_router
+from .config_routes import router as config_router
 
 # Esta é uma boa prática, mas opcional.
 # Define o que é exportado quando alguém faz 'from .api import *'
