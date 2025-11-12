@@ -32,7 +32,7 @@ async def create_product_config(
     config_dict = config_data.model_dump(by_alias=True)
     
     # Verifica se um produto com o mesmo nome já existe
-    existing_config = existing_config = await db["products"].find_one({"nome": config_dict["nome"]})
+    existing_config = await db["products"].find_one({"nome": config_dict["nome"]})
     if existing_config:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
