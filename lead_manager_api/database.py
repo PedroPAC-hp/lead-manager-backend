@@ -1,24 +1,22 @@
-# backend/lead_manager_api/database.py
+# lead_manager_api/database.py
+import pymongo
+from .config import settings
 
-from motor.motor_asyncio import AsyncIOMotorClient
-from .config import settings # Importa as configurações
+client = None
 
-client: AsyncIOMotorClient = None
-
-async def connect_to_mongo():
+def connect_to_mongo():
     global client
-    print("Conectando ao MongoDB...")
-    client = AsyncIOMotorClient(settings.MONGO_URI)
-    print("Conexão com MongoDB estabelecida.")
+    print("Conectando ao MongoDB (síncrono)...")
+    client = pymongo.MongoClient(settings.MONGO_URI)
+    print("Conexão com MongoDB (síncrono) estabelecida.")
 
-async def close_mongo_connection():
+def close_mongo_connection():
     global client
     if client:
         client.close()
-        print("Conexão com MongoDB fechada.")
+        print("Conexão com MongoDB (síncrono) fechada.")
 
 def get_database():
     if client is None:
-        raise Exception("A conexão com o banco de dados não foi estabelecida.")
-    # Usa o nome do banco de dados das nossas configurações
+        connect_to_mongo()
     return client[settings.DATABASE_NAME]

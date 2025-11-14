@@ -1,14 +1,10 @@
-# requirements.txt
-
 fastapi
-uvicorn[standard]
+uvicorn
 pydantic
 pydantic-settings
-motor
-passlib[argon2]==1.7.4
+pymongo[srv]  # <-- MUDANÇA CRÍTICA: pymongo, não motor
+passlib[argon2]
 python-jose[cryptography]
 python-multipart
-pandas
-openpyxl
 gunicorn
 email-validator
