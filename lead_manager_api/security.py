@@ -1,64 +1,44 @@
-﻿# backend/lead_manager_api/security.py
+﻿# lead_manager_api/security.py
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, Optional
+from typing import Optional
+from pymongo.database import Database # <-- MUDANÇA AQUI
 
-from .database import get_database
-from .schemas import TokenData, UserPublic  # <-- MUDANÇA PRINCIPAL AQUI
-from motor.motor_asyncio import AsyncIOMotorDatabase
 from .config import settings
+from .database import get_database # <-- MUDANÇA AQUI
+from .schemas import TokenData
 
-# --- Configuração de Segurança ---
-SECRET_KEY = settings.SECRET_KEY
-ALGORITHM = settings.ALGORITHM
-ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
-
-# Contexto para hashing de senhas
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
-
-# Esquema OAuth2
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-# --- Funções de Segurança ---
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifica se a senha fornecida corresponde ao hash."""
+def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-def get_password_hash(password: str) -> str:
-    """Gera o hash de uma senha."""
+def get_password_hash(password):
     return pwd_context.hash(password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    """Cria um novo token de acesso JWT."""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
-async def get_current_active_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    db: AsyncIOMotorDatabase = Depends(get_database)
-) -> UserPublic:
-    """
-    Decodifica o token JWT, valida o usuário e retorna os dados do usuário.
-    Protege as rotas que precisam de autenticação.
-    """
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Database = Depends(get_database)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Não foi possível validar as credenciais",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
@@ -66,10 +46,12 @@ async def get_current_active_user(
     except JWTError:
         raise credentials_exception
     
-    user = await db.users.find_one({"email": token_data.email})
+    user = db["users"].find_one({"email": token_data.email})
+    
     if user is None:
         raise credentials_exception
-    
-    # Retorna o usuário como um modelo Pydantic para garantir a consistência
-    return UserPublic(**user)
+    return user
 
+async def get_current_active_user(current_user: dict = Depends(get_current_user)):
+    # No futuro, podemos adicionar uma verificação se o usuário está "desativado"
+    return current_user
