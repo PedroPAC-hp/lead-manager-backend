@@ -5,8 +5,7 @@ uvicorn[standard]
 pydantic
 pydantic-settings
 motor
-passlib==1.7.4
-bcrypt==3.2.0
+passlib[argon2]==1.7.4
 python-jose[cryptography]
 python-multipart
 pandas

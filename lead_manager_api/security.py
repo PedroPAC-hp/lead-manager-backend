@@ -18,7 +18,7 @@ ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 # Contexto para hashing de senhas
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 # Esquema OAuth2
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
